@@ -64,5 +64,17 @@ nov2017$Date <- as.Date("2017-11-29", "%Y-%m-%d")
 historical_weather <- rbind(historical_weather, nov2017)
 historical_weather <- historical_weather[order(historical_weather$county, historical_weather$Date), ]
 
+# calculate cumulative rainfall in prior 30 days
+counties <- unique(historical_weather$county)
+historical_weather$monthly_rain <- NA
+
+for (k in 1:length(counties)){
+  rainSub <- subset(historical_weather, county == counties[k]) 
+  for (l in 30:nrow(rainSub)){
+    rainSub2 <- subset(rainSub, Date >= Date[l] - 29 & Date <= Date[l])
+    historical_weather$monthly_rain[which(historical_weather$county==counties[k]&historical_weather$Date==rainSub$Date[l])] <- sum(rainSub2$Rainfall)
+  }
+}  
+
 # save data
 save(historical_weather, file="weather_data/historical_weather.RData")
