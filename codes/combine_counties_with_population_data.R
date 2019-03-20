@@ -14,28 +14,37 @@ for (i in 1:length(aedes.files)){
   assign(fileName, x)
 }
 
-# fix state name for wisconsin
-colnames(aedes_collections_wisconsin)[colnames(aedes_collections_wisconsin)=="ï..state"] <- "state"
-
-# connect popuation data
-colnames(fid_sum_pop_tl)[colnames(fid_sum_pop_tl)=="OBJECTID"] <- "FID"
-
-fid_merged <- merge(fid_sum_pop_tl, tl_2016_us_county, by="FID")
-fid_merged$population <- fid_merged$AREA * fid_merged$SUM
-
-# subset and rename columns 
-fid_merged <- fid_merged[,c("STATEFP", "COUNTYFP", "NAME", "population")]
-colnames(fid_merged) <- c("statefp", "countyfp", "county", "population")
-
 # rbind aedes data
-aedes_collections <- do.call(rbind, list(aedes_collections_california, aedes_collections_connecticut, aedes_collections_north_carolina, aedes_collections_wisconsin))
+aedes_collections <- do.call(rbind, list(aedes_collections_california
+                                       , aedes_collections_connecticut
+                                       , aedes_collections_florida
+                                       , aedes_collections_new_jersey
+                                       , aedes_collections_new_york
+                                       , aedes_collections_north_carolina
+                                       , aedes_collections_texas
+                                       , aedes_collections_wisconsin))
 
-# subset by unique counties
-aedes_collections_counties <- aedes_collections[,c("state", "statefp", "county", "countyfp")]
-aedes_collections_counties <- aedes_collections_counties[!duplicated(aedes_collections_counties),]
+aedes_collections$Date <- paste(aedes_collections$year, aedes_collections$month, "01", sep='-')
+aedes_collections$Date <- as.Date(aedes_collections$Date, "%Y-%m-%d")
+
+# subset by unique counties and calculate min and max date by county
+aedes_collections <- ddply(aedes_collections, .(state, statefp, county, countyfp), summarize
+                            , minimum_date = min(Date)-180
+                            , maximum_date = max(Date))
+
+
+# format demographic data
+us_census_2015 <- us_census_data[,c("STATE", 'COUNTY', "STNAME", "CTYNAME", "POPESTIMATE2015", "RDEATH2015", "RBIRTH2015")]
+colnames(us_census_2015) <- c("statefp", "countyfp", "state", "county", "Population", "Death_rate", "Birth_rate")
+us_census_2015$county <- gsub(" County", "", us_census_2015$county)
+
+# format geographic coordinate data
+AC_county_coords <- AC_county_coords[,c("STATEFP", "COUNTYFP", "NAME", "Lat", "Long")]
+colnames(AC_county_coords) <- c("statefp", "countyfp", "county", "Latitude", "Longitude")
 
 # combine population data for each county in collection dataset
-aedes_collections_counties <- merge(aedes_collections_counties, fid_merged, by=c("statefp", "countyfp", "county"))
+aedes_collections_counties <- merge(aedes_collections, us_census_2015, by=c("statefp", "countyfp", "state", "county"), all.x=T)
+aedes_collections_counties <- merge(aedes_collections_counties, AC_county_coords, by=c("statefp", "countyfp", "county"), all.x=T)
 
 # save data
-save(aedes_collections_counties, file = "data/county_populations.RData")
+save(aedes_collections_counties, file = "concatenated_data/county_populations.RData")
