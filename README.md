@@ -1,14 +1,16 @@
 # aedes_forecasting_challenge
 
-Stanford University & University of Florida model for the 2019 CDC Aedes Forecasting challenge (https://predict.cdc.gov/post/5c4f6d687620e103b6dcd015)
-
 Team name: Aedes ladies
 
+Stanford University & University of Florida model for the 2019 CDC Aedes Forecasting challenge (https://predict.cdc.gov/post/5c4f6d687620e103b6dcd015)
+
 Model description: 
+
 We are using mechanistic compartmental models to predict mosquito abundances through time and then using statistical models to calculate 
 the probability of mosquito presence as a function of predicted mosquito abundance from the mechanistic models. We used an SEI-SEIR model framework developed to predict dengue transmission (see Huber et al. 2018 below for equations) and parameterized separate models for Aedes aegypti and Aedes albopictus based on species-specific temperature-dependent mosquito traits. We allowed mosquito carrying capacity to vary with rainfall (moving window of monthly rainfall accumulation). We ran the mechanistic models using demographic and weather data for the 95 counties participating in this challenge to produce a time series of retrospectively predicted mosquito abundances for each species. Using logistic regressions, we calculated the probability of Aedes aegypti or Aedes albopictus presence as a function of predicted mosquito abundance from the mechanistic model with county as a fixed effect. For each monthly forecast, we run the mechanistic models using 16-day weather forecasts and use the output of estimated mosquito abundances in the logistic regression models to produce probabilities of mosquito presence for Aedes aegypti and Aedes albopictus.
 
 Description of codes in repository:
+
 Mechanistic models:
 - SEI-SEIR_aegypti_model.R: Aedes aegypti SEI-SEIR model
 - SEI-SEIR_albopictus_model.R: Aedes albopictus SEI-SEIR model
